@@ -86,7 +86,7 @@ def main():
     
     # Run analysis
     print("Starting analysis pipeline...\n")
-    result = run_complete_analysis(image)
+    _, _, result = run_complete_analysis(image)
     
     # Print results
     print_analysis_summary(result)

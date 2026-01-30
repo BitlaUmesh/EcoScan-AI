@@ -62,7 +62,7 @@ def load_image_from_bytes(image_bytes: bytes) -> Optional[Image.Image]:
         return None
 
 
-def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> Dict:
+def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> tuple:
     """
     Run complete analysis pipeline on an image
     
@@ -76,7 +76,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
         api_key: Optional API key
         
     Returns:
-        Complete analysis dictionary
+        Tuple containing (vision_result, analysis_result, final_output)
     """
     from backend.vision import analyze_waste_object, validate_image
     from backend.reasoning import analyze_reuse_potential
@@ -84,7 +84,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
     
     # Validate image
     if not validate_image(image):
-        return {
+        return None, None, {
             "status": "error",
             "error": "Invalid image: Image too small or corrupted",
             "object_type": "Unknown",
@@ -97,7 +97,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
     vision_result = analyze_waste_object(image, api_key)
     
     if vision_result["status"] != "success":
-        return {
+        return vision_result, None, {
             "status": "error",
             "error": vision_result["description"],
             "object_type": "Unknown",
@@ -121,49 +121,42 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
     final_output = format_final_output(vision_result, analysis)
     final_output["status"] = "success"
     
-    return final_output
+    return vision_result, analysis, final_output
 
 
 def check_api_key() -> bool:
     """
-    Check if Ollama service is available
+    Check if Gemini API key is configured
     
     Returns:
-        True if Ollama is running
+        True if GEMINI_API_KEY is set in environment
     """
-    try:
-        import requests
-        response = requests.get("http://localhost:11434/api/tags", timeout=2)
-        return response.status_code == 200
-    except:
-        return False
+    api_key = os.getenv("GEMINI_API_KEY")
+    return api_key is not None and len(api_key) > 0
 
 
 def get_setup_instructions() -> str:
     """
-    Get setup instructions for Ollama
+    Get setup instructions for Gemini API
     
     Returns:
         Instruction string
     """
     return """
-OLLAMA SETUP REQUIRED
-====================
+GEMINI API SETUP REQUIRED
+===========================
 
-This application requires Ollama (local LLM service).
+This application requires a Google Gemini API key.
 
-Steps to install and run:
-1. Download from: https://ollama.ai
-2. Install and run Ollama:
-   ollama serve
+Steps to set up:
+1. Get your free API key from: https://aistudio.google.com/app/apikey
+2. Create or edit a .env file in the EcoScan-AI folder with:
+   
+   GEMINI_API_KEY=your_api_key_here
 
-3. In another terminal, pull required models:
-   ollama pull llava      (for image analysis)
-   ollama pull mistral    (for text reasoning)
+3. Restart the application
 
-4. Ollama will run on http://localhost:11434
-
-That's it! No API keys needed, everything runs locally.
+That's it! The app will use Google's cloud-based Gemini API.
 """
 
 
@@ -195,7 +188,8 @@ def validate_environment() -> Dict[str, bool]:
         "PIL": False,
         "requests": False,
         "streamlit": False,
-        "ollama": False
+        "google-generativeai": False,
+        "gemini_api_key": False
     }
     
     # Check PIL
@@ -219,7 +213,14 @@ def validate_environment() -> Dict[str, bool]:
     except ImportError:
         pass
     
-    # Check Ollama service
-    checks["ollama"] = check_api_key()
+    # Check google-generativeai
+    try:
+        import google.generativeai
+        checks["google-generativeai"] = True
+    except ImportError:
+        pass
+    
+    # Check Gemini API key
+    checks["gemini_api_key"] = check_api_key()
     
     return checks

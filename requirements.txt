@@ -2,11 +2,11 @@
 # Python 3.8+ required
 
 # Core AI/ML
-requests>=2.31.0          # For Ollama API communication
-Pillow>=10.0.0            # Image processing
+google-generativeai>=0.3.0    # Google Gemini API
+Pillow>=10.0.0                # Image processing
 
 # Web Interface
 streamlit>=1.28.0             # Frontend framework
 
 # Utilities
-python-dotenv>=1.0.0          # Environment variable management (optional)
+python-dotenv>=1.0.0          # Environment variable management

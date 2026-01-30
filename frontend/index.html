@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoGen AI - Waste Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="custom-header">
+        <div class="logo-container">
+            <div class="logo-icon">♻️</div>
+            <div class="logo-text">
+                <h1>EcoGen AI</h1>
+                <p>Waste-to-Resource Intelligence</p>
+            </div>
+        </div>
+        <div class="nav-badges">
+            <div class="nav-item">🍃 Eco-Friendly</div>
+            <div class="nav-item">🛡️ Human-Safe</div>
+            <div class="nav-item">❤️ Social Impact</div>
+        </div>
+        <button id="theme-toggle" class="theme-toggle">🌙</button>
+    </div>
+
+    <!-- Hero / Upload Section -->
+    <div id="hero-section" class="container">
+        <div class="hero-section">
+            <div class="hero-title">
+                Transform Waste Into<br>
+                <span class="hero-highlight">Valuable Resources</span>
+            </div>
+            <p class="hero-subtitle">
+                Upload any item and our AI will analyze it, assess safety, and generate 
+                personalized eco-friendly upcycling ideas.
+            </p>
+        </div>
+
+        <div class="upload-section">
+            <div class="tabs">
+                <button id="tab-upload" class="tab-btn active">📁 Upload Image</button>
+                <button id="tab-camera" class="tab-btn">📸 Use Camera</button>
+            </div>
+
+            <!-- File Upload Area -->
+            <div id="upload-area">
+                <div class="upload-area">
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    <button onclick="document.getElementById('file-input').click()" class="btn-primary" style="background: none; color: var(--primary-600); border: 2px solid var(--primary-100);">
+                        Select Image
+                    </button>
+                    <p style="margin-top: 1rem; color: var(--text-600); font-size: 0.9rem;">JPG, PNG up to 10MB</p>
+                </div>
+            </div>
+
+            <!-- Camera Area -->
+            <div id="camera-area" class="hidden">
+                <video id="camera-preview" autoplay playsinline></video>
+                <button id="capture-btn" class="btn-primary" style="margin-bottom: 1rem;">Capture Photo</button>
+            </div>
+
+            <img id="image-preview" class="hidden" style="max-width: 100%; border-radius: 0.5rem; margin-bottom: 1rem;">
+
+            <button id="analyze-btn" class="btn-primary" disabled>✨ Analyze with AI</button>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="result-card" style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">✨</div>
+                <h3>AI-Powered Analysis</h3>
+                <p style="color: var(--text-600); font-size: 0.9rem;">Computer vision identifies objects and assesses material composition</p>
+            </div>
+            <div class="result-card" style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">🛡️</div>
+                <h3>Safety First</h3>
+                <p style="color: var(--text-600); font-size: 0.9rem;">Every recommendation is checked for human safety and eco-friendliness</p>
+            </div>
+            <div class="result-card" style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">📈</div>
+                <h3>Real Impact</h3>
+                <p style="color: var(--text-600); font-size: 0.9rem;">Track CO₂ savings and environmental impact of your upcycling projects</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" class="container hidden">
+        <button id="back-btn" style="background: none; border: none; color: var(--text-600); cursor: pointer; margin-bottom: 1rem; font-size: 1rem;">
+            ← Analyze Another Item
+        </button>
+
+        <div class="dashboard">
+            <!-- Left Column -->
+            <div class="left-col">
+                <div class="result-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 id="res-title" style="font-size: 1.5rem; font-weight: 700; margin: 0;">Object</h3>
+                        <span class="badge badge-emerald">Recyclable</span>
+                    </div>
+                    <img id="res-image" style="width: 100%; border-radius: 0.75rem; margin-bottom: 1rem;">
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-600);">Verdict</span>
+                        <span id="res-verdict" style="font-weight: 500;">Reusable</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span style="color: var(--text-600);">Materials</span>
+                        <span id="res-materials" style="font-weight: 500; text-align: right;">Plastic</span>
+                    </div>
+                    
+                    <div id="res-safety" style="margin-top: 1rem; padding: 0.75rem; background: var(--primary-50); border: 1px solid var(--primary-100); border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: var(--primary-700); font-weight: 600;">
+                        🛡️ Safety Score: 95/100
+                    </div>
+                </div>
+
+                <div class="impact-card">
+                    <div class="impact-title">🍃 Environmental Impact</div>
+                    <div class="impact-row">
+                        <span>CO₂ per kg</span>
+                        <span id="res-co2-unit">0.5 kg</span>
+                    </div>
+                    <div class="impact-row">
+                        <span>Total Potential</span>
+                        <span id="res-co2-total">1.25 kg</span>
+                    </div>
+                </div>
+
+                <div class="result-card" style="margin-top: 1.5rem;">
+                    <h4 style="margin-top: 0;">📝 Condition Summary</h4>
+                    <p id="res-condition" style="color: var(--text-600); font-size: 0.9rem; margin-bottom: 0;">Good condition.</p>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-col">
+                <h3 style="margin-top: 0;">AI-Generated Eco Ideas</h3>
+                <div id="suggestions-container">
+                    <!-- Dynamic Suggestions -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

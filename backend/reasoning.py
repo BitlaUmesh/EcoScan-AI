@@ -3,6 +3,7 @@
 """
 Reasoning Module - LLM-Based Condition Analysis & Reuse Intelligence
 Performs higher-level reasoning on vision outputs to determine reusability
+Uses Google Gemini API for analysis
 """
 
 import os
@@ -10,6 +11,7 @@ from typing import Dict, List, Optional
 import json
 import re
 from dotenv import load_dotenv
+import time
 
 # Load .env file on module import
 load_dotenv()
@@ -21,12 +23,12 @@ def analyze_reuse_potential(
     api_key: Optional[str] = None
 ) -> Dict:
     """
-    Use Ollama LLM to analyze reuse potential based on vision description
+    Use Google Gemini API to analyze reuse potential based on vision description
     
     Args:
         vision_description: Detailed description from vision model
         object_type: Type of object identified
-        api_key: Optional (not used with Ollama)
+        api_key: Optional Gemini API key (uses GEMINI_API_KEY env var if not provided)
         
     Returns:
         Dictionary containing:
@@ -38,13 +40,18 @@ def analyze_reuse_potential(
             - verdict: str (Reusable/Conditionally Reusable/Not Reusable)
     """
     try:
-        import requests
+        import google.generativeai as genai
         
-        # Check Ollama service
-        try:
-            requests.get("http://localhost:11434/api/tags", timeout=2)
-        except:
-            return generate_error_response("Ollama service not running. Please start: ollama serve")
+        # Get API key
+        if not api_key:
+            api_key = os.getenv("GEMINI_API_KEY")
+        
+        if not api_key:
+            return generate_error_response("GEMINI_API_KEY not found in environment variables")
+        
+        # Configure Gemini
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
         
         # Construct reasoning prompt
         prompt = f"""You are a material sustainability analyst evaluating waste objects for reuse potential.
@@ -73,12 +80,22 @@ Provide your analysis in the following JSON format:
   "verdict": "Reusable" OR "Conditionally Reusable" OR "Not Reusable",
   "condition_summary": "One sentence summary of overall condition",
   "reasoning": "Clear explanation of why it is/isn't reusable based on observed condition",
-  "key_factors": ["factor 1", "factor 2", "factor 3"],
+  "safety_score": 0-100 (Assessment of handling safety),
+  "recyclability": true/false,
+  "material_composition": ["material1", "material2"],
+  "estimated_co2_saved_kg": 0.0 (float estimate),
   "suggestions": [
     {{
-      "use_case": "Specific reuse idea",
-      "explanation": "Why this works given the object's condition",
-      "category": "home_utility/outdoor/diy/storage/other"
+      "id": "unique_id",
+      "title": "Short title of reuse idea",
+      "description": "Brief description",
+      "difficulty": "Easy" OR "Medium" OR "Hard",
+      "time_required": "e.g. 15 mins",
+      "materials": ["list", "of", "materials"],
+      "steps": ["step 1", "step 2", "step 3"],
+      "co2_saved": 0.0 (float estimate),
+      "category": "Upcycle" OR "Recycle" OR "Repurpose" OR "Compost",
+      "safety_notes": ["note 1", "note 2"]
     }}
   ]
 }}
@@ -87,27 +104,27 @@ IMPORTANT GUIDELINES:
 - Be realistic and practical
 - If damaged but cleanable, mark as "Conditionally Reusable"
 - Only mark "Not Reusable" if truly unsafe or non-functional
-- Provide 2-5 specific reuse suggestions if feasible
+- Provide 3-4 specific reuse suggestions if feasible
 - Base reasoning ONLY on what was observed in the image
 - Do NOT make claims about chemical safety or food safety without clear evidence
 
 Return ONLY valid JSON, no additional text."""
         
-        # Generate analysis using Ollama
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "mistral",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=120
-        )
+        # Generate analysis using Gemini with retry logic
+        max_retries = 3
+        response_text = ""
         
-        if response.status_code != 200:
-            return generate_error_response(f"Ollama error: {response.text}")
-        
-        response_text = response.json().get("response", "").strip()
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content(prompt)
+                response_text = response.text.strip()
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                    continue
+                else:
+                    raise e
         
         # Extract JSON from response
         analysis = parse_llm_json_response(response_text)
@@ -115,6 +132,8 @@ Return ONLY valid JSON, no additional text."""
         # Validate and normalize
         return normalize_analysis(analysis)
         
+    except ImportError:
+        return generate_error_response("google-generativeai library not installed. Run: pip install google-generativeai")
     except Exception as e:
         return generate_error_response(f"LLM analysis failed: {str(e)}")
 

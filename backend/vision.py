@@ -2,7 +2,7 @@
 
 """
 Vision Module - AI-Powered Image Understanding
-Uses pretrained vision models to analyze waste object images
+Uses Google Gemini Vision API to analyze waste object images
 """
 
 import os
@@ -11,6 +11,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 from dotenv import load_dotenv
+import time
 
 # Load .env file on module import
 load_dotenv()
@@ -33,14 +34,13 @@ def encode_image_to_base64(image: Image.Image) -> str:
 
 def analyze_waste_object(image: Image.Image, api_key: Optional[str] = None) -> Dict[str, str]:
     """
-    Analyze waste object image using vision AI
+    Analyze waste object image using Google Gemini Vision API
     
-    Uses Google Gemini Vision API (free tier) for object analysis.
     Describes material type, condition, damage, contamination, and physical state.
     
     Args:
         image: PIL Image object of the waste item
-        api_key: Optional Gemini API key (uses env var if not provided)
+        api_key: Optional Gemini API key (uses GEMINI_API_KEY env var if not provided)
         
     Returns:
         Dictionary containing:
@@ -49,17 +49,22 @@ def analyze_waste_object(image: Image.Image, api_key: Optional[str] = None) -> D
             - status: Success/error status
     """
     try:
-        import requests
+        import google.generativeai as genai
         
-        # Check Ollama service
-        try:
-            requests.get("http://localhost:11434/api/tags", timeout=2)
-        except:
+        # Get API key
+        if not api_key:
+            api_key = os.getenv("GEMINI_API_KEY")
+        
+        if not api_key:
             return {
                 "status": "error",
-                "description": "Ollama service not running. Please start Ollama: ollama serve",
+                "description": "GEMINI_API_KEY not found in environment variables",
                 "object_type": "unknown"
             }
+        
+        # Configure Gemini
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
         
         # Craft detailed prompt for waste object analysis
         prompt = """You are an expert material analyst examining a waste object for reuse potential.
@@ -79,31 +84,22 @@ Write in a clear, professional tone as if documenting for a sustainability asses
 
 Format your response as a single detailed paragraph."""
         
-        # Encode image to base64
-        image_b64 = encode_image_to_base64(image)
+        # Call Gemini with vision capability with retry
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content([prompt, image])
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                    continue
+                else:
+                    raise e
         
-        # Call Ollama with vision model
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "llava",
-                "prompt": prompt,
-                "images": [image_b64],
-                "stream": False
-            },
-            timeout=120
-        )
+        description = response.text.strip()
         
-        if response.status_code != 200:
-            return {
-                "status": "error",
-                "description": f"Ollama error: {response.text}",
-                "object_type": "unknown"
-            }
-        
-        description = response.json().get("response", "").strip()
-        
-        # Extract object type (simple keyword detection)
+        # Extract object type
         object_type = extract_object_type(description)
         
         return {
@@ -112,12 +108,6 @@ Format your response as a single detailed paragraph."""
             "object_type": object_type
         }
         
-    except ImportError:
-        return {
-            "status": "error",
-            "description": "Google Generative AI library not installed. Run: pip install google-generativeai",
-            "object_type": "unknown"
-        }
     except Exception as e:
         return {
             "status": "error",

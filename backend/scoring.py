@@ -180,8 +180,10 @@ def generate_summary_report(final_output: Dict) -> str:
     if final_output['suggestions']:
         lines.append("REUSE SUGGESTIONS:")
         for i, suggestion in enumerate(final_output['suggestions'], 1):
-            lines.append(f"{i}. {suggestion['use_case']}")
-            lines.append(f"   → {suggestion['explanation']}")
+            title = suggestion.get('title', suggestion.get('use_case', 'Suggestion'))
+            desc = suggestion.get('description', suggestion.get('explanation', ''))
+            lines.append(f"{i}. {title}")
+            lines.append(f"   → {desc}")
         lines.append("")
     
     lines.append("=" * 60)
