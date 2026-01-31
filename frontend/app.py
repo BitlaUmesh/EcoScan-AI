@@ -266,10 +266,14 @@ def display_results(result: dict):
         st.subheader("💡 Reuse Suggestions")
         
         for i, suggestion in enumerate(result["suggestions"], 1):
+            # Handle both 'title' and 'use_case' keys for compatibility
+            title = suggestion.get('title') or suggestion.get('use_case', 'Reuse Idea')
+            description = suggestion.get('description') or suggestion.get('explanation', '')
+            
             st.markdown(f"""
             <div class="suggestion-card">
-                <h4>{i}. {suggestion['use_case']}</h4>
-                <p>{suggestion['explanation']}</p>
+                <h4>{i}. {title}</h4>
+                <p>{description}</p>
                 <small>Category: {suggestion.get('category', 'general').replace('_', ' ').title()}</small>
             </div>
             """, unsafe_allow_html=True)
