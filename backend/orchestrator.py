@@ -58,7 +58,7 @@ def run_complete_analysis_with_transformation(
             "error": vision_result["description"]
         }
     
-    print(f"✓ Vision analysis complete. Detected: {vision_result['object_type']}")
+    print(f"[OK] Vision analysis complete. Detected: {vision_result['object_type']}")
     
     print("Step 2: Performing reuse analysis with LLM...")
     analysis = analyze_reuse_potential(
@@ -67,7 +67,7 @@ def run_complete_analysis_with_transformation(
         api_key
     )
     
-    print(f"✓ Analysis complete. Verdict: {analysis['verdict']}")
+    print(f"[OK] Analysis complete. Verdict: {analysis['verdict']}")
     
     # Format basic output
     basic_output = format_final_output(vision_result, analysis)
@@ -107,7 +107,7 @@ def generate_transformation_intelligence(
         basic_analysis.get("condition_summary", ""),
         api_key
     )
-    print(f"✓ Selected target: {target_selection['target_product']}")
+    print(f"[OK] Selected target: {target_selection['target_product']}")
     
     # Stage 2: Generate transformation procedure
     print("\nStep 4: Generating transformation procedure...")
@@ -118,7 +118,7 @@ def generate_transformation_intelligence(
         basic_analysis.get("visual_description", ""),
         api_key
     )
-    print(f"✓ Procedure generated: {len(procedure['procedure_steps'])} steps, {procedure['estimated_time_minutes']} minutes")
+    print(f"[OK] Procedure generated: {len(procedure['procedure_steps'])} steps, {procedure['estimated_time_minutes']} minutes")
     
     # Stage 3: Assess transformation quality
     print("\nStep 5: Assessing post-transformation quality...")
@@ -129,7 +129,7 @@ def generate_transformation_intelligence(
         procedure,
         api_key
     )
-    print(f"✓ Quality assessed: {quality_assessment['expected_lifespan_months']} months lifespan")
+    print(f"[OK] Quality assessed: {quality_assessment['expected_lifespan_months']} months lifespan")
     
     # Stage 4: Calculate market price
     print("\nStep 6: Calculating fair market price...")
@@ -139,7 +139,7 @@ def generate_transformation_intelligence(
         procedure,
         basic_analysis.get("object_type", "unknown")
     )
-    print(f"✓ Price calculated: ₹{pricing['suggested_price_range']['min']}-₹{pricing['suggested_price_range']['max']}")
+    print(f"[OK] Price calculated: Rs.{pricing['suggested_price_range']['min']}-Rs.{pricing['suggested_price_range']['max']}")
     
     # Stage 5: Generate decision trace
     print("\nStep 7: Generating decision trace...")
@@ -151,7 +151,7 @@ def generate_transformation_intelligence(
         basic_analysis.get("visual_description", ""),
         basic_analysis.get("condition_summary", "")
     )
-    print("✓ Decision trace complete")
+    print("[OK] Decision trace complete")
     
     print("\n" + "="*60)
     print("TRANSFORMATION INTELLIGENCE COMPLETE")

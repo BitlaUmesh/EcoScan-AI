@@ -52,25 +52,25 @@ def get_verdict_display(verdict: str, score: int) -> Dict[str, str]:
     verdict_config = {
         "Reusable": {
             "color": "green",
-            "emoji": "✅",
+            "emoji": "[OK]",
             "message": "This object is suitable for reuse!",
             "icon": "🌱"
         },
         "Conditionally Reusable": {
             "color": "orange",
-            "emoji": "⚠️",
+            "emoji": "[!]",
             "message": "This object can be reused with some preparation or limitations.",
             "icon": "🔄"
         },
         "Not Reusable": {
             "color": "red",
-            "emoji": "❌",
+            "emoji": "[X]",
             "message": "This object is not recommended for reuse.",
             "icon": "🚫"
         },
         "Analysis Failed": {
             "color": "gray",
-            "emoji": "⚠️",
+            "emoji": "[!]",
             "message": "Unable to analyze this object.",
             "icon": "❓"
         }

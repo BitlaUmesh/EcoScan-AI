@@ -107,7 +107,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
             "verdict": "Analysis Failed"
         }
     
-    print(f"✓ Vision analysis complete. Detected: {vision_result['object_type']}")
+    print(f"[OK] Vision analysis complete. Detected: {vision_result['object_type']}")
     
     # Step 2: LLM reasoning
     print("Step 2: Performing reuse analysis with LLM...")
@@ -117,7 +117,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
         api_key
     )
     
-    print(f"✓ Analysis complete. Verdict: {analysis['verdict']}")
+    print(f"[OK] Analysis complete. Verdict: {analysis['verdict']}")
     
     # Step 3: Format output
     final_output = format_final_output(vision_result, analysis)
@@ -150,9 +150,9 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
             )
             
             final_output["pricing"] = pricing
-            print(f"✓ Price range: ₹{pricing['suggested_price_range']['min']}-₹{pricing['suggested_price_range']['max']}")
+            print(f"[OK] Price range: Rs.{pricing['suggested_price_range']['min']}-Rs.{pricing['suggested_price_range']['max']}")
     except Exception as e:
-        print(f"⚠ Pricing calculation skipped: {str(e)}")
+        print(f"[WARNING] Pricing calculation skipped: {str(e)}")
     
     return vision_result, analysis, final_output
 
@@ -231,7 +231,7 @@ def print_analysis_summary(result: Dict):
     from backend.scoring import generate_summary_report
     
     if result.get("status") == "error":
-        print("\n❌ ANALYSIS FAILED")
+        print("\n[ERROR] ANALYSIS FAILED")
         print(f"Error: {result.get('error', 'Unknown error')}")
         return
     
