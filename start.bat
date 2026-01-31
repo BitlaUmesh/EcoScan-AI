@@ -37,30 +37,12 @@ echo Running environment check...
 python test\test_pipeline.py --check-env
 echo.
 
-REM Launch menu
+REM Launch the application
 echo ==========================================
-echo Choose launch option:
+echo Launching Web Application
 echo ==========================================
-echo 1. Launch Web Application (HTML/Flask)
-echo 2. Run Terminal Test
-echo 3. Exit
 echo.
-set /p choice="Enter choice (1-3): "
-
-if "%choice%"=="1" (
-    echo.
-    echo Launching Flask application...
-    echo The app will open in your browser at http://localhost:5000
-    echo.
-    python server.py
-) else if "%choice%"=="2" (
-    echo.
-    set /p img_path="Enter path to test image: "
-    python test\test_pipeline.py "%img_path%"
-) else if "%choice%"=="3" (
-    echo Exiting...
-    exit /b 0
-) else (
-    echo Invalid choice. Exiting...
-    exit /b 1
-)
+echo Starting Flask server...
+echo The app will open in your browser at http://localhost:5000
+echo.
+python server.py
