@@ -49,6 +49,8 @@ def analyze_waste_object(image: Image.Image, api_key: Optional[str] = None) -> D
             - status: Success/error status
     """
     try:
+        import warnings
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
         import google.generativeai as genai
         
         # Get API key

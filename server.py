@@ -6,8 +6,8 @@ import base64
 from io import BytesIO
 from PIL import Image
 
-# Add backend to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Add current directory to path
+sys.path.insert(0, os.path.dirname(__file__))
 
 from backend.utils import run_complete_analysis, load_image_from_bytes
 
@@ -81,4 +81,5 @@ def analyze():
 if __name__ == '__main__':
     print("Starting EcoScan AI Server...")
     print("Go to http://localhost:5000 to use the HTML frontend")
-    app.run(debug=True, port=5000)
+    # Disable debug mode for stability during testing to prevent reloads
+    app.run(debug=False, host='0.0.0.0', port=5000)

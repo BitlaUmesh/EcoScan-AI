@@ -40,6 +40,8 @@ def analyze_reuse_potential(
             - verdict: str (Reusable/Conditionally Reusable/Not Reusable)
     """
     try:
+        import warnings
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
         import google.generativeai as genai
         
         # Get API key

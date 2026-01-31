@@ -41,7 +41,7 @@ def load_image_from_path(image_path: str) -> Optional[Image.Image]:
 
 def load_image_from_bytes(image_bytes: bytes) -> Optional[Image.Image]:
     """
-    Load image from bytes (e.g., from Streamlit camera input)
+    Load image from bytes (e.g., from web camera input)
     
     Args:
         image_bytes: Image data as bytes
@@ -70,6 +70,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
     1. Analyzes image with vision model
     2. Performs LLM-based reasoning
     3. Calculates scores and formats output
+    4. Generates pricing for recycled product
     
     Args:
         image: PIL Image object
@@ -81,6 +82,7 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
     from backend.vision import analyze_waste_object, validate_image
     from backend.reasoning import analyze_reuse_potential
     from backend.scoring import format_final_output
+    from backend.transformation_engine import calculate_market_price
     
     # Validate image
     if not validate_image(image):
@@ -121,7 +123,66 @@ def run_complete_analysis(image: Image.Image, api_key: Optional[str] = None) -> 
     final_output = format_final_output(vision_result, analysis)
     final_output["status"] = "success"
     
+    # Step 4: Calculate pricing for primary suggestion if available
+    try:
+        if analysis.get("suggestions") and len(analysis["suggestions"]) > 0:
+            primary_suggestion = analysis["suggestions"][0]
+            target_product = primary_suggestion.get("title", primary_suggestion.get("use_case", "recycled product"))
+            
+            # Create a simple quality assessment from available data
+            quality_assessment = {
+                "expected_lifespan_months": 12,
+                "structural_integrity": analysis.get("condition_summary", "good")
+            }
+            
+            # Create a simple procedure from suggestion
+            procedure = {
+                "difficulty_level": primary_suggestion.get("difficulty", "Medium"),
+                "estimated_time_minutes": parse_time_to_minutes(primary_suggestion.get("time_required", "30 mins"))
+            }
+            
+            print("\nStep 3: Calculating market price for recycled product...")
+            pricing = calculate_market_price(
+                target_product,
+                quality_assessment,
+                procedure,
+                vision_result["object_type"]
+            )
+            
+            final_output["pricing"] = pricing
+            print(f"✓ Price range: ₹{pricing['suggested_price_range']['min']}-₹{pricing['suggested_price_range']['max']}")
+    except Exception as e:
+        print(f"⚠ Pricing calculation skipped: {str(e)}")
+    
     return vision_result, analysis, final_output
+
+
+def parse_time_to_minutes(time_str: str) -> int:
+    """
+    Parse time string like '30 mins' or '1 hour' to minutes
+    
+    Args:
+        time_str: Time string
+        
+    Returns:
+        Time in minutes
+    """
+    import re
+    time_str = time_str.lower()
+    
+    # Extract numbers
+    numbers = re.findall(r'\d+', time_str)
+    if not numbers:
+        return 30  # default
+    
+    value = int(numbers[0])
+    
+    if 'hour' in time_str:
+        return value * 60
+    elif 'min' in time_str:
+        return value
+    else:
+        return value
 
 
 def check_api_key() -> bool:
@@ -187,7 +248,7 @@ def validate_environment() -> Dict[str, bool]:
     checks = {
         "PIL": False,
         "requests": False,
-        "streamlit": False,
+        "flask": False,
         "google-generativeai": False,
         "gemini_api_key": False
     }
@@ -206,10 +267,10 @@ def validate_environment() -> Dict[str, bool]:
     except ImportError:
         pass
     
-    # Check streamlit
+    # Check flask
     try:
-        import streamlit
-        checks["streamlit"] = True
+        import flask
+        checks["flask"] = True
     except ImportError:
         pass
     

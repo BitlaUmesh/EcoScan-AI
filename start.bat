@@ -41,7 +41,7 @@ REM Launch menu
 echo ==========================================
 echo Choose launch option:
 echo ==========================================
-echo 1. Launch Web Application (Streamlit)
+echo 1. Launch Web Application (HTML/Flask)
 echo 2. Run Terminal Test
 echo 3. Exit
 echo.
@@ -49,10 +49,10 @@ set /p choice="Enter choice (1-3): "
 
 if "%choice%"=="1" (
     echo.
-    echo Launching Streamlit application...
-    echo The app will open in your browser at http://localhost:8501
+    echo Launching Flask application...
+    echo The app will open in your browser at http://localhost:5000
     echo.
-    streamlit run frontend\app.py
+    python server.py
 ) else if "%choice%"=="2" (
     echo.
     set /p img_path="Enter path to test image: "

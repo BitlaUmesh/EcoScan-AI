@@ -66,11 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Capture Photo
     captureBtn.addEventListener('click', () => {
+        if (!video.srcObject || !video.srcObject.active) {
+            alert('Camera is not ready. Please try again.');
+            return;
+        }
+
         const canvas = document.createElement('canvas');
         
-        // Scale down large images to max 1280px width to reduce payload size
         let width = video.videoWidth;
         let height = video.videoHeight;
+        
+        if (width === 0 || height === 0) {
+            alert('Camera feed is not ready. Please wait a moment and try again.');
+            return;
+        }
+        
         const maxWidth = 1280;
         
         if (width > maxWidth) {
@@ -82,15 +92,18 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.height = height;
         canvas.getContext('2d').drawImage(video, 0, 0, width, height);
         
-        // Compress as JPEG with 0.8 quality instead of PNG
-        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        
-        // Show preview
-        imagePreview.src = imageDataUrl;
-        imagePreview.classList.remove('hidden');
-        
-        // Prepare for analysis
-        analyzeImage(null, imageDataUrl);
+        // Convert to blob for better handling
+        canvas.toBlob((blob) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Data = e.target.result;
+                imagePreview.src = base64Data;
+                imagePreview.classList.remove('hidden');
+                analyzeBtn.disabled = false;
+                analyzeBtn.onclick = () => analyzeImage(null, base64Data);
+            };
+            reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.85);
     });
 
     // File Upload
@@ -148,30 +161,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render Results
     function renderResults(data) {
+        if (!data || data.status === 'error') {
+            alert('Analysis failed: ' + (data.error || 'Unknown error'));
+            return;
+        }
+
         heroSection.classList.add('hidden');
         dashboardSection.classList.remove('hidden');
 
-        const final = data.results;
-        const analysis = data.analysis;
+        const final = data.results || {};
+        const analysis = data.analysis || {};
         
         // Update Object Card
-        document.getElementById('res-image').src = "data:image/png;base64," + data.image_b64;
-        document.getElementById('res-title').textContent = final.object_type;
-        document.getElementById('res-verdict').textContent = final.verdict;
-        document.getElementById('res-materials').textContent = (analysis.material_composition || []).join(', ');
-        document.getElementById('res-safety').textContent = `🛡️ Safety Score: ${analysis.safety_score || final.score}/100`;
-        document.getElementById('res-condition').textContent = final.condition_summary;
+        document.getElementById('res-image').src = "data:image/png;base64," + (data.image_b64 || '');
+        document.getElementById('res-title').textContent = final.object_type || 'Unknown';
+        document.getElementById('res-verdict').textContent = final.verdict || 'N/A';
+        document.getElementById('res-materials').textContent = (analysis.material_composition || []).join(', ') || 'Unknown';
+        document.getElementById('res-safety').textContent = `🛡️ Safety Score: ${analysis.safety_score || final.score || 0}/100`;
+        document.getElementById('res-condition').textContent = final.condition_summary || 'No summary available.';
 
         // Update Impact Card
         const co2 = analysis.estimated_co2_saved_kg || 0.5;
         document.getElementById('res-co2-unit').textContent = `${co2} kg`;
         document.getElementById('res-co2-total').textContent = `${(co2 * 2.5).toFixed(2)} kg`;
 
+        // Update Pricing if available
+        if (data.results.pricing) {
+            const pricing = data.results.pricing;
+            const priceRange = pricing.suggested_price_range;
+            const confidence = pricing.pricing_confidence || 'Medium';
+            
+            document.getElementById('res-price-range').textContent = `₹${priceRange.min} - ₹${priceRange.max}`;
+            document.getElementById('res-price-confidence').textContent = `Confidence: ${confidence}`;
+        }
+
         // Render Suggestions
         const suggestionsContainer = document.getElementById('suggestions-container');
         suggestionsContainer.innerHTML = '';
 
-        (analysis.suggestions || []).forEach(rec => {
+        const suggestions = analysis.suggestions || final.suggestions || [];
+        if (suggestions.length === 0) {
+            suggestionsContainer.innerHTML = '<p style="color: var(--text-600);">No specific reuse ideas generated for this item.</p>';
+        }
+
+        suggestions.forEach(rec => {
             const div = document.createElement('div');
             div.className = 'rec-item';
             div.innerHTML = `

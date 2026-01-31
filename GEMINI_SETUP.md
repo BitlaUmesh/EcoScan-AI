@@ -29,17 +29,17 @@ pip install -r requirements.txt
 
 This installs:
 - `google-generativeai` - For Gemini API access
-- `streamlit` - Web interface
+- `flask` - Web server
 - `pillow` - Image processing
 - `python-dotenv` - Environment variable management
 
 ### 4. Run the Application
 
 ```bash
-streamlit run frontend/app.py
+python server.py
 ```
 
-The app will open at: **http://localhost:8501**
+The app will open at: **http://localhost:5000**
 
 ## How It Works
 
@@ -60,7 +60,7 @@ The system uses Google Gemini API for:
 
 - Make sure `.env` file exists in the project root
 - Check that `GEMINI_API_KEY=your_key` is correctly set
-- Restart the Streamlit app after editing `.env`
+- Restart the application after editing `.env`
 
 ### "google-generativeai library not installed"
 
@@ -85,10 +85,14 @@ backend/
   └── utils.py      → Helper functions
 
 frontend/
-  └── app.py        → Streamlit UI
+  ├── index.html    → HTML UI
+  ├── static/
+  │   ├── css/      → Styling
+  │   └── js/       → Interaction logic
 
-.env              → Your API key (CREATE THIS!)
-requirements.txt  → Dependencies
+server.py           → Flask entry point
+.env                → Your API key (CREATE THIS!)
+requirements.txt    → Dependencies
 ```
 
 ## Features
