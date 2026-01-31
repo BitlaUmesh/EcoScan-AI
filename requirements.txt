@@ -8,6 +8,7 @@ Pillow>=10.0.0                # Image processing
 # Web Interface
 flask>=3.0.0
 flask-cors>=4.0.0
+gunicorn>=21.0.0              # Production WSGI server
 
 # Utilities
 python-dotenv>=1.0.0          # Environment variable management

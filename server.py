@@ -14,6 +14,11 @@ from backend.utils import run_complete_analysis, load_image_from_bytes
 app = Flask(__name__, template_folder='frontend', static_folder='frontend/static')
 CORS(app)
 
+# Production configuration
+app.config['ENV'] = os.getenv('FLASK_ENV', 'production')
+app.config['DEBUG'] = os.getenv('FLASK_DEBUG', 'False') == 'True'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'ecoscan-ai-change-in-production')
+
 # Configure max upload size (100MB) to handle high-res camera captures
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
@@ -23,6 +28,7 @@ def handle_exception(e):
     if hasattr(e, "code"):
         return jsonify(error=str(e)), e.code
     # Handle non-HTTP errors
+    print(f"Unhandled exception: {str(e)}")
     return jsonify(error=str(e)), 500
 
 @app.route('/')
@@ -78,8 +84,16 @@ def analyze():
         print(f"Error processing request: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for monitoring"""
+    return jsonify({'status': 'healthy', 'app': 'EcoScan-AI'}), 200
+
 if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
     print("Starting EcoScan AI Server...")
-    print("Go to http://localhost:5000 to use the HTML frontend")
-    # Disable debug mode for stability during testing to prevent reloads
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    print(f"Go to http://localhost:{port} to use the HTML frontend")
+    
+    # Production-safe settings
+    debug_mode = os.getenv('FLASK_DEBUG', 'False') == 'True'
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
